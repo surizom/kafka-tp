@@ -25,29 +25,38 @@ import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Produced;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
+import java.util.Scanner;
 import java.util.concurrent.CountDownLatch;
 
 /**
- * Demonstrates, using the high-level KStream DSL, how to implement the WordCount program
- * that computes a simple word occurrence histogram from an input text.
+ * Demonstrates, using the high-level KStream DSL, how to implement the
+ * WordCount program that computes a simple word occurrence histogram from an
+ * input text.
  * <p>
- * In this example, the input stream reads from a topic named "streams-plaintext-input", where the values of messages
- * represent lines of text; and the histogram output is written to topic "streams-wordcount-output" where each record
- * is an updated count of a single word.
+ * In this example, the input stream reads from a topic named
+ * "streams-plaintext-input", where the values of messages represent lines of
+ * text; and the histogram output is written to topic "streams-wordcount-output"
+ * where each record is an updated count of a single word.
  * <p>
- * Before running this example you must create the input topic and the output topic (e.g. via
- * {@code bin/kafka-topics.sh --create ...}), and write some data to the input topic (e.g. via
- * {@code bin/kafka-console-producer.sh}). Otherwise you won't see any data arriving in the output topic.
+ * Before running this example you must create the input topic and the output
+ * topic (e.g. via {@code bin/kafka-topics.sh --create ...}), and write some
+ * data to the input topic (e.g. via {@code bin/kafka-console-producer.sh}).
+ * Otherwise you won't see any data arriving in the output topic.
  */
 public final class WordTagger {
 
     public static final String INPUT_TOPIC = "words-stream";
     public static final String OUTPUT_TOPIC = "tagged-words-stream";
+
+    private static Map<String, String> tagMap = new HashMap<>();
 
     static Properties getStreamsConfig(final String[] args) throws IOException {
         final Properties props = new Properties();
@@ -56,7 +65,8 @@ public final class WordTagger {
                 props.load(fis);
             }
             if (args.length > 1) {
-                System.out.println("Warning: Some command line arguments were ignored. This demo only accepts an optional configuration file.");
+                System.out.println(
+                        "Warning: Some command line arguments were ignored. This demo only accepts an optional configuration file.");
             }
         }
         props.putIfAbsent(StreamsConfig.APPLICATION_ID_CONFIG, "streams-wordcount");
@@ -65,7 +75,8 @@ public final class WordTagger {
         props.putIfAbsent(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         props.putIfAbsent(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
 
-        // setting offset reset to earliest so that we can re-run the demo code with the same pre-loaded data
+        // setting offset reset to earliest so that we can re-run the demo code with the
+        // same pre-loaded data
         // Note: To re-run the demo, you need to use the offset reset tool:
         // https://cwiki.apache.org/confluence/display/KAFKA/Kafka+Streams+Application+Reset+Tool
         props.putIfAbsent(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
@@ -76,9 +87,8 @@ public final class WordTagger {
         final KStream<String, String> source = builder.stream(INPUT_TOPIC);
 
         final KTable<String, Long> counts = source
-            .flatMapValues(value -> Arrays.asList(value.toLowerCase(Locale.getDefault()).split(" ")))
-            .groupBy((key, value) -> value)
-            .count();
+                .flatMapValues(value -> Arrays.asList(value.toLowerCase(Locale.getDefault()).split(" ")))
+                .groupBy((key, value) -> value).count();
 
         // need to override value serde to Long type
         counts.toStream().to(OUTPUT_TOPIC, Produced.with(Serdes.String(), Serdes.Long()));
@@ -91,6 +101,13 @@ public final class WordTagger {
         createWordCountStream(builder);
         final KafkaStreams streams = new KafkaStreams(builder.build(), props);
         final CountDownLatch latch = new CountDownLatch(1);
+
+        try (Scanner scanner = new Scanner(new File("Lexique.csv"));) {
+            while (scanner.hasNextLine()) {
+                String[] line = scanner.nextLine().split(";");
+                tagMap.put(line[0], line[2]);
+            }
+        }
 
         // attach shutdown handler to catch control-c
         Runtime.getRuntime().addShutdownHook(new Thread("streams-wordcount-shutdown-hook") {
