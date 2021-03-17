@@ -44,10 +44,10 @@ import java.util.concurrent.CountDownLatch;
  * {@code bin/kafka-topics.sh --create ...}), and write some data to the input topic (e.g. via
  * {@code bin/kafka-console-producer.sh}). Otherwise you won't see any data arriving in the output topic.
  */
-public final class WordCount {
+public final class WordTagger {
 
-    public static final String INPUT_TOPIC = "lines-stream";
-    public static final String OUTPUT_TOPIC = "words-stream";
+    public static final String INPUT_TOPIC = "words-stream";
+    public static final String OUTPUT_TOPIC = "tagged-words-stream";
 
     static Properties getStreamsConfig(final String[] args) throws IOException {
         final Properties props = new Properties();
