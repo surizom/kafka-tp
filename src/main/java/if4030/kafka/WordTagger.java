@@ -17,13 +17,17 @@ package if4030.kafka;
  * limitations under the License.
  */
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.kstream.Aggregator;
 import org.apache.kafka.streams.kstream.KStream;
+import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.KeyValueMapper;
+import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
 
 import java.io.File;
@@ -83,18 +87,14 @@ public final class WordTagger {
     }
 
     static void createWordTagStream(final StreamsBuilder builder) {
-        final KStream<String, String> source = builder.stream(INPUT_TOPIC);
+        final KStream<String, Long> source = builder.stream(INPUT_TOPIC);
 
-        final KStream<String, String> taggedWords = source
-                .map(new KeyValueMapper<String, String, KeyValue<String, String>>() {
-                    @Override
-                    public KeyValue<String, String> apply(String key, String value) {
-                        return new KeyValue<String, String>(value, tagMap.get(value));
-                    }
-                });
+        final KTable<String, Long> taggedWords = source.map((key, value) -> KeyValue.pair(tagMap.get(key), value))
+                .groupByKey()
+                .reduce(Long::sum);
 
         // need to override value serde to Long type
-        taggedWords.to(OUTPUT_TOPIC, Produced.with(Serdes.String(), Serdes.String()));
+        taggedWords.toStream().to(OUTPUT_TOPIC, Produced.with(Serdes.String(), Serdes.Long()));
     }
 
     public static void main(final String[] args) throws IOException {
