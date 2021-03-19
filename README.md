@@ -2,8 +2,10 @@ Little word classification project to explore kafka stream processors
 
 # How to run
 
-- In the Makefile, set the KAFKA_DIR variable pointing toward your kafka installation
+In the Makefile, set the KAFKA_DIR variable pointing toward your kafka installation !
+
 On separate terminals for each step :
+
 - run `make start-zookeeper`
 - run `make start-kafka`
 - run `make start-topics` and `make compile-processors`
