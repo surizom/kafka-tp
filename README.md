@@ -1,7 +1,7 @@
 # How to test
-- Set the KAFKA_DIR variable pointing toward your kafka installation (in .bashrc/.zshrc, for example)
-- run `make init`
-- run `make start-streams`
+- In the Makefile, set the KAFKA_DIR variable pointing toward your kafka installation
+- run `make start-zookeeper`
+- run `make start-kafka`
 
 # Reinitialization
 - run `make clean`
