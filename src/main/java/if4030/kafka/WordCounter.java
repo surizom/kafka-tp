@@ -33,16 +33,19 @@ import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
 
 /**
- * Demonstrates, using the high-level KStream DSL, how to implement the WordCount program
- * that computes a simple word occurrence histogram from an input text.
+ * Demonstrates, using the high-level KStream DSL, how to implement the
+ * WordCount program that computes a simple word occurrence histogram from an
+ * input text.
  * <p>
- * In this example, the input stream reads from a topic named "streams-plaintext-input", where the values of messages
- * represent lines of text; and the histogram output is written to topic "streams-wordcount-output" where each record
- * is an updated count of a single word.
+ * In this example, the input stream reads from a topic named
+ * "streams-plaintext-input", where the values of messages represent lines of
+ * text; and the histogram output is written to topic "streams-wordcount-output"
+ * where each record is an updated count of a single word.
  * <p>
- * Before running this example you must create the input topic and the output topic (e.g. via
- * {@code bin/kafka-topics.sh --create ...}), and write some data to the input topic (e.g. via
- * {@code bin/kafka-console-producer.sh}). Otherwise you won't see any data arriving in the output topic.
+ * Before running this example you must create the input topic and the output
+ * topic (e.g. via {@code bin/kafka-topics.sh --create ...}), and write some
+ * data to the input topic (e.g. via {@code bin/kafka-console-producer.sh}).
+ * Otherwise you won't see any data arriving in the output topic.
  */
 public final class WordCounter {
 
@@ -56,7 +59,8 @@ public final class WordCounter {
                 props.load(fis);
             }
             if (args.length > 1) {
-                System.out.println("Warning: Some command line arguments were ignored. This demo only accepts an optional configuration file.");
+                System.out.println(
+                        "Warning: Some command line arguments were ignored. This demo only accepts an optional configuration file.");
             }
         }
         props.putIfAbsent(StreamsConfig.APPLICATION_ID_CONFIG, "streams-wordcount");
@@ -65,7 +69,8 @@ public final class WordCounter {
         props.putIfAbsent(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
         props.putIfAbsent(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
 
-        // setting offset reset to earliest so that we can re-run the demo code with the same pre-loaded data
+        // setting offset reset to earliest so that we can re-run the demo code with the
+        // same pre-loaded data
         // Note: To re-run the demo, you need to use the offset reset tool:
         // https://cwiki.apache.org/confluence/display/KAFKA/Kafka+Streams+Application+Reset+Tool
         props.putIfAbsent(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
@@ -76,11 +81,9 @@ public final class WordCounter {
         final KStream<String, String> source = builder.stream(INPUT_TOPIC);
 
         final KTable<String, Long> counts = source
-            .flatMapValues(value -> Arrays.asList(value.toLowerCase(Locale.getDefault()).split(" ")))
-            .groupBy((key, value) -> value)
-            .count();
+                .flatMapValues(value -> Arrays.asList(value.toLowerCase(Locale.getDefault()).split(" ")))
+                .groupBy((key, value) -> value).count();
 
-        // need to override value serde to Long type
         counts.toStream().to(OUTPUT_TOPIC, Produced.with(Serdes.String(), Serdes.Long()));
     }
 
