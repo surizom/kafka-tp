@@ -1,8 +1,11 @@
 package if4030.kafka;
 
+import java.io.BufferedReader;
+import java.io.Console;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -20,21 +23,6 @@ import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Produced;
 
-/**
- * Demonstrates, using the high-level KStream DSL, how to implement the
- * WordCount program that computes a simple word occurrence histogram from an
- * input text.
- * <p>
- * In this example, the input stream reads from a topic named
- * "streams-plaintext-input", where the values of messages represent lines of
- * text; and the histogram output is written to topic "streams-wordcount-output"
- * where each record is an updated count of a single word.
- * <p>
- * Before running this example you must create the input topic and the output
- * topic (e.g. via {@code bin/kafka-topics.sh --create ...}), and write some
- * data to the input topic (e.g. via {@code bin/kafka-console-producer.sh}).
- * Otherwise you won't see any data arriving in the output topic.
- */
 public final class WordTagger {
 
     public static final String INPUT_TOPIC = "words-stream";
@@ -85,14 +73,13 @@ public final class WordTagger {
         final KafkaStreams streams = new KafkaStreams(builder.build(), props);
         final CountDownLatch latch = new CountDownLatch(1);
 
-        File lexique = Paths.get(DummyClass.instance.getClass().getClassLoader().getResource("abc.txt").toURI())
-                .toFile();
+        String line = null;
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(
+                Thread.currentThread().getContextClassLoader().getResourceAsStream("Lexique.csv")));
 
-        try (Scanner scanner = new Scanner(lexique);) {
-            while (scanner.hasNextLine()) {
-                String[] line = scanner.nextLine().split(";");
-                tagMap.put(line[0], line[2]);
-            }
+        while ((line = bufferedReader.readLine()) != null) {
+            String[] splittedLine = line.split(";");
+            tagMap.put(splittedLine[0], splittedLine[2]);
         }
 
         // attach shutdown handler to catch control-c
@@ -111,9 +98,5 @@ public final class WordTagger {
             System.exit(1);
         }
         System.exit(0);
-    }
-
-    public static class DummyClass {
-        public static DummyClass instance = new DummyClass();
     }
 }
