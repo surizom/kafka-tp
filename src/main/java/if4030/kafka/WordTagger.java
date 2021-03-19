@@ -85,7 +85,8 @@ public final class WordTagger {
         final KafkaStreams streams = new KafkaStreams(builder.build(), props);
         final CountDownLatch latch = new CountDownLatch(1);
 
-        File lexique = Paths.get(INPUT_TOPIC.getClass().getClassLoader().getResource("abc.txt").toURI()).toFile();
+        File lexique = Paths.get(DummyClass.instance.getClass().getClassLoader().getResource("abc.txt").toURI())
+                .toFile();
 
         try (Scanner scanner = new Scanner(lexique);) {
             while (scanner.hasNextLine()) {
@@ -110,5 +111,9 @@ public final class WordTagger {
             System.exit(1);
         }
         System.exit(0);
+    }
+
+    public static class DummyClass {
+        public static DummyClass instance = new DummyClass();
     }
 }
