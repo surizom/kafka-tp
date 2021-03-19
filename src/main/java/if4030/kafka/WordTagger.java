@@ -33,6 +33,8 @@ import org.apache.kafka.streams.kstream.Produced;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -90,14 +92,13 @@ public final class WordTagger {
         final KStream<String, Long> source = builder.stream(INPUT_TOPIC);
 
         final KTable<String, Long> taggedWords = source.map((key, value) -> KeyValue.pair(tagMap.get(key), value))
-                .groupByKey()
-                .reduce(Long::sum);
+                .groupByKey().reduce(Long::sum);
 
         // need to override value serde to Long type
         taggedWords.toStream().to(OUTPUT_TOPIC, Produced.with(Serdes.String(), Serdes.Long()));
     }
 
-    public static void main(final String[] args) throws IOException {
+    public static void main(final String[] args) throws IOException, URISyntaxException {
         final Properties props = getStreamsConfig(args);
 
         final StreamsBuilder builder = new StreamsBuilder();
@@ -105,7 +106,9 @@ public final class WordTagger {
         final KafkaStreams streams = new KafkaStreams(builder.build(), props);
         final CountDownLatch latch = new CountDownLatch(1);
 
-        try (Scanner scanner = new Scanner(new File("Lexique.csv"));) {
+        File lexique = Paths.get(INPUT_TOPIC.getClass().getClassLoader().getResource("abc.txt").toURI()).toFile();
+
+        try (Scanner scanner = new Scanner(lexique);) {
             while (scanner.hasNextLine()) {
                 String[] line = scanner.nextLine().split(";");
                 tagMap.put(line[0], line[2]);
