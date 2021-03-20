@@ -1,5 +1,9 @@
 Little word classification project to explore kafka stream processors
 
+# Architecture Diagram
+
+
+![Architecture Diagram](./diagram.png)
 # How to run
 
 In the Makefile, set the KAFKA_DIR variable pointing toward your kafka installation !
