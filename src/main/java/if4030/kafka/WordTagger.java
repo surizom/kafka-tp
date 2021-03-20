@@ -56,6 +56,7 @@ public final class WordTagger {
         final KStream<String, Long> source = builder.stream(INPUT_TOPIC);
 
         final KTable<String, Long> taggedWords = source.map((key, value) -> KeyValue.pair(tagMap.get(key), value))
+                .filter((key, value) -> key != null && !key.isBlank())
                 .groupByKey().reduce(Long::sum);
 
         // need to override value serde to Long type

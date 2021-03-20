@@ -82,7 +82,7 @@ public final class WordCounter {
 
         final KTable<String, Long> counts = source
                 .flatMapValues(value -> Arrays.asList(value.toLowerCase(Locale.getDefault()).split(" ")))
-                .groupBy((key, value) -> value).count();
+                .filter((key, value) -> value != null && !value.isBlank()).groupBy((key, value) -> value).count();
 
         counts.toStream().to(OUTPUT_TOPIC, Produced.with(Serdes.String(), Serdes.Long()));
     }
