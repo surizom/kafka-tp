@@ -9,11 +9,11 @@ start-topics:
 compile-processors:
 	mvn clean package
 start-counter:
-	java -cp target/tp-kafka-0.0.1-SNAPSHOT.jar if4030.kafka.WordCounter
+	java -cp target/tp-kafka-0.0.1-SNAPSHOT.jar if4030.kafka.BookToWords
 start-tagger:
-	java -cp target/tp-kafka-0.0.1-SNAPSHOT.jar if4030.kafka.WordTagger
+	java -cp target/tp-kafka-0.0.1-SNAPSHOT.jar if4030.kafka.LexicalTranslation
 start-classifier:
-	java -cp target/tp-kafka-0.0.1-SNAPSHOT.jar if4030.kafka.ClassificationPrinter
+	java -cp target/tp-kafka-0.0.1-SNAPSHOT.jar if4030.kafka.TopWordsPerCategory
 start-producer:
 	cat books/shorttext.txt | $(KAFKA_DIR)/bin/kafka-console-producer.sh --bootstrap-server localhost:9092 \
         --topic lines-stream
@@ -25,19 +25,19 @@ start-line-consumer:
         --topic lines-stream --from-beginning \
         --formatter kafka.tools.DefaultMessageFormatter --property print.key=true \
         --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer \
-        --property value.deserializer=org.apache.kafka.common.serialization.LongDeserializer
+        --property value.deserializer=org.apache.kafka.common.serialization.StringDeserializer
 start-count-consumer:
 	$(KAFKA_DIR)/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 \
         --topic words-stream --from-beginning \
         --formatter kafka.tools.DefaultMessageFormatter --property print.key=true \
         --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer \
-        --property value.deserializer=org.apache.kafka.common.serialization.LongDeserializer
+        --property value.deserializer=org.apache.kafka.common.serialization.StringDeserializer
 start-tag-consumer:
 	$(KAFKA_DIR)/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 \
         --topic tagged-words-stream --from-beginning \
         --formatter kafka.tools.DefaultMessageFormatter --property print.key=true \
         --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer \
-        --property value.deserializer=org.apache.kafka.common.serialization.LongDeserializer
+        --property value.deserializer=org.apache.kafka.common.serialization.StringDeserializer
 clean:
 	rm -rf /tmp/kafka-*
 	rm -rf /tmp/zookeeper
