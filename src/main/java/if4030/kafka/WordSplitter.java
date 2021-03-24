@@ -47,7 +47,7 @@ import java.util.concurrent.CountDownLatch;
  * data to the input topic (e.g. via {@code bin/kafka-console-producer.sh}).
  * Otherwise you won't see any data arriving in the output topic.
  */
-public final class WordCounter {
+public final class WordSplitter {
 
     public static final String INPUT_TOPIC = "lines-stream";
     public static final String OUTPUT_TOPIC = "words-stream";
@@ -77,14 +77,17 @@ public final class WordCounter {
         return props;
     }
 
+    private static String SPECIAL_CHARACTERS_SPLIT = "[\\s@&.?$+-]+";
+
     static void createWordCountStream(final StreamsBuilder builder) {
         final KStream<String, String> source = builder.stream(INPUT_TOPIC);
 
-        final KTable<String, Long> counts = source
-                .flatMapValues(value -> Arrays.asList(value.toLowerCase(Locale.getDefault()).split(" ")))
-                .filter((key, value) -> value != null && !value.isBlank()).groupBy((key, value) -> value).count();
+        final KStream<String, String> counts = source
+                .flatMapValues(
+                        value -> Arrays.asList(value.toLowerCase(Locale.getDefault()).split(SPECIAL_CHARACTERS_SPLIT)))
+                .filter((key, value) -> value != null && !value.isBlank());
 
-        counts.toStream().to(OUTPUT_TOPIC, Produced.with(Serdes.String(), Serdes.Long()));
+        counts.to(OUTPUT_TOPIC, Produced.with(Serdes.String(), Serdes.String()));
     }
 
     public static void main(final String[] args) throws IOException {

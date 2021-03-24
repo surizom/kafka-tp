@@ -8,8 +8,8 @@ start-topics:
 	./start-topics.sh $(KAFKA_DIR)
 compile-processors:
 	mvn clean package
-start-counter:
-	java -cp target/tp-kafka-0.0.1-SNAPSHOT.jar if4030.kafka.BookToWords
+start-splitter:
+	java -cp target/tp-kafka-0.0.1-SNAPSHOT.jar if4030.kafka.WordSplitter
 start-tagger:
 	java -cp target/tp-kafka-0.0.1-SNAPSHOT.jar if4030.kafka.LexicalTranslation
 start-classifier:
