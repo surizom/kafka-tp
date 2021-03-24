@@ -85,6 +85,7 @@ public final class WordSplitter {
         final KStream<String, String> counts = source
                 .flatMapValues(
                         value -> Arrays.asList(value.toLowerCase(Locale.getDefault()).split(SPECIAL_CHARACTERS_SPLIT)))
+                .mapValues((key, value) -> value.replaceAll("[^a-zA-Z]+", ""))
                 .filter((key, value) -> value != null && !value.isBlank());
 
         counts.to(OUTPUT_TOPIC, Produced.with(Serdes.String(), Serdes.String()));
