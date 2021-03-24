@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.CountDownLatch;
@@ -16,16 +17,19 @@ import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.KStream;
-import org.apache.kafka.streams.kstream.KTable;
 import org.apache.kafka.streams.kstream.Produced;
 
-public final class WordTagger {
+public final class WordToLexiqueInterpreter {
 
     public static final String INPUT_TOPIC = "words-stream";
     public static final String OUTPUT_TOPIC = "tagged-words-stream";
 
-    private static Map<String, String> tagMap = new HashMap<>();
+    private static Map<String, String> categoriesMap = new HashMap<>();
+    private static Map<String, String> lexiqueMap = new HashMap<>();
+
+    private static List<String> supportedCategories = List.of("NOM", "ADJ", "VER");
 
     static Properties getStreamsConfig(final String[] args) throws IOException {
         final Properties props = new Properties();
@@ -38,7 +42,7 @@ public final class WordTagger {
                         "Warning: Some command line arguments were ignored. This demo only accepts an optional configuration file.");
             }
         }
-        props.putIfAbsent(StreamsConfig.APPLICATION_ID_CONFIG, "streams-wordcount");
+        props.putIfAbsent(StreamsConfig.APPLICATION_ID_CONFIG, "streams-wordlexiqueinterpreter");
         props.putIfAbsent(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         props.putIfAbsent(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
         props.putIfAbsent(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
@@ -53,14 +57,16 @@ public final class WordTagger {
     }
 
     static void createWordTagStream(final StreamsBuilder builder) {
-        final KStream<String, Long> source = builder.stream(INPUT_TOPIC);
+        final KStream<String, String> source = builder.stream(INPUT_TOPIC,
+                Consumed.with(Serdes.String(), Serdes.String()));
 
-        final KTable<String, Long> taggedWords = source.map((key, value) -> KeyValue.pair(tagMap.get(key), value))
-                .filter((key, value) -> key != null && !key.isBlank())
-                .groupByKey().reduce(Long::sum);
+        final KStream<String, String> taggedWords = source
+                .map((key, value) -> KeyValue.pair(categoriesMap.get(value), lexiqueMap.get(value)))
+                .filter((key, value) -> key != null && !key.isBlank() && value != null && !value.isBlank())
+                .filter((key, value) -> supportedCategories.contains(key));
 
         // need to override value serde to Long type
-        taggedWords.toStream().to(OUTPUT_TOPIC, Produced.with(Serdes.String(), Serdes.Long()));
+        taggedWords.to(OUTPUT_TOPIC, Produced.with(Serdes.String(), Serdes.String()));
     }
 
     public static void main(final String[] args) throws IOException, URISyntaxException {
@@ -76,12 +82,16 @@ public final class WordTagger {
                 Thread.currentThread().getContextClassLoader().getResourceAsStream("Lexique.csv")));
 
         while ((line = bufferedReader.readLine()) != null) {
-            String[] splittedLine = line.split(";");
-            tagMap.put(splittedLine[0], splittedLine[2]);
+            String[] splittedLine = line.split(",");
+            if (splittedLine.length < 3) {
+                continue;
+            }
+            categoriesMap.put(splittedLine[0], splittedLine[2]);
+            lexiqueMap.put(splittedLine[0], splittedLine[1]);
         }
 
         // attach shutdown handler to catch control-c
-        Runtime.getRuntime().addShutdownHook(new Thread("streams-wordcount-shutdown-hook") {
+        Runtime.getRuntime().addShutdownHook(new Thread("streams-wordlexiqueinterpreter-shutdown-hook") {
             @Override
             public void run() {
                 streams.close();
