@@ -11,11 +11,11 @@ compile-processors:
 start-splitter:
 	java -cp target/tp-kafka-0.0.1-SNAPSHOT.jar if4030.kafka.WordSplitter
 start-tagger:
-	java -cp target/tp-kafka-0.0.1-SNAPSHOT.jar if4030.kafka.LexicalTranslation
+	java -cp target/tp-kafka-0.0.1-SNAPSHOT.jar if4030.kafka.WordToLexiqueInterpreter
 start-classifier:
 	java -cp target/tp-kafka-0.0.1-SNAPSHOT.jar if4030.kafka.TopWordsPerCategory
 start-producer:
-	cat books/shorttext.txt | $(KAFKA_DIR)/bin/kafka-console-producer.sh --bootstrap-server localhost:9092 \
+	cat books/notredame.txt | $(KAFKA_DIR)/bin/kafka-console-producer.sh --bootstrap-server localhost:9092 \
         --topic lines-stream
 stop-signal:
 	echo "END" | $(KAFKA_DIR)/bin/kafka-console-producer.sh --bootstrap-server localhost:9092 \
