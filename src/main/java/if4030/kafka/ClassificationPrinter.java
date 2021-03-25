@@ -2,10 +2,13 @@ package if4030.kafka;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Map.Entry;
 import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one or more
@@ -28,6 +31,7 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsBuilder;
 import org.apache.kafka.streams.StreamsConfig;
+import org.apache.kafka.streams.kstream.Consumed;
 import org.apache.kafka.streams.kstream.KStream;
 
 /**
@@ -48,9 +52,9 @@ import org.apache.kafka.streams.kstream.KStream;
 public final class ClassificationPrinter {
 
     public static final String STOP_TOPIC = "stop-topic";
-    public static final String INPUT_TOPIC = "tagged-words-topic";
+    public static final String INPUT_TOPIC = "tagged-words-stream";
 
-    private static Map<String, Long> tagOccurence = new HashMap<>();
+    private static Map<String, Map<String, Long>> lexiqueOccurenceByCategory = new HashMap<>();
 
     static Properties getStreamsConfig(final String[] args) throws IOException {
         final Properties props = new Properties();
@@ -63,7 +67,7 @@ public final class ClassificationPrinter {
                         "Warning: Some command line arguments were ignored. This demo only accepts an optional configuration file.");
             }
         }
-        props.putIfAbsent(StreamsConfig.APPLICATION_ID_CONFIG, "streams-wordcount");
+        props.putIfAbsent(StreamsConfig.APPLICATION_ID_CONFIG, "classification-printer");
         props.putIfAbsent(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         props.putIfAbsent(StreamsConfig.CACHE_MAX_BYTES_BUFFERING_CONFIG, 0);
         props.putIfAbsent(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
@@ -77,18 +81,36 @@ public final class ClassificationPrinter {
         return props;
     }
 
+    static void updateOccurences(String category, String lemme) {
+        if (lexiqueOccurenceByCategory.get(category) == null) {
+            lexiqueOccurenceByCategory.put(category, Collections.singletonMap(lemme, 0L));
+        }
+
+        lexiqueOccurenceByCategory.get(category).entrySet().stream()
+                .map(entry -> Map.entry(entry.getKey(), entry.getValue() + (entry.getKey().equals(lemme) ? 1L : 0L)))
+                .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+    }
+
     static void createWordTagStream(final StreamsBuilder builder) {
-        final KStream<String, Long> source = builder.stream(INPUT_TOPIC);
+        final KStream<String, String> source = builder.stream(INPUT_TOPIC,
+                Consumed.with(Serdes.String(), Serdes.String()));
         final KStream<String, String> stopSource = builder.stream(STOP_TOPIC);
 
-        source.peek((key, value) -> tagOccurence.put(key, value));
+        source.filter((key, value) -> key != null && !key.isBlank() && value != null && !value.isBlank())
+                .peek((category, lemme) -> updateOccurences(category, lemme));
 
         stopSource.filter((key, value) -> value.equals("END")).peek((key, value) -> printTop20Tags());
     }
 
     static void printTop20Tags() {
-        tagOccurence.entrySet().stream().sorted(Map.Entry.comparingByValue()).limit(20).forEach(
-                (entry) -> System.out.println("catégorie : " + entry.getKey() + "; occurences : " + entry.getValue()));
+        lexiqueOccurenceByCategory.entrySet().stream().forEach(category -> printTop20InCategory(category));
+    }
+
+    static void printTop20InCategory(Entry<String, Map<String, Long>> category) {
+        System.out.println("---------------------");
+        System.out.println("Catégorie : " + category.getKey());
+        category.getValue().entrySet().stream().sorted(Map.Entry.comparingByValue()).limit(20).forEach(
+                (entry) -> System.out.println("mot : " + entry.getKey() + "; occurences : " + entry.getValue()));
     }
 
     public static void main(final String[] args) throws IOException {
@@ -100,7 +122,7 @@ public final class ClassificationPrinter {
         final CountDownLatch latch = new CountDownLatch(1);
 
         // attach shutdown handler to catch control-c
-        Runtime.getRuntime().addShutdownHook(new Thread("streams-wordcount-shutdown-hook") {
+        Runtime.getRuntime().addShutdownHook(new Thread("classification-printer-shutdown-hook") {
             @Override
             public void run() {
                 streams.close();
