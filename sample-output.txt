@@ -1,0 +1,67 @@
+Output for "Notre dame de paris" By Victor Hugo
+---------------------
+Catégorie : VER
+mot : avoir; occurences : 2160
+mot : être; occurences : 1519
+mot : luire; occurences : 886
+mot : taire; occurences : 869
+mot : faire; occurences : 743
+mot : voir; occurences : 560
+mot : pouvoir; occurences : 407
+mot : dire; occurences : 404
+mot : porter; occurences : 344
+mot : damer; occurences : 323
+mot : venir; occurences : 323
+mot : savoir; occurences : 310
+mot : aller; occurences : 253
+mot : vouloir; occurences : 243
+mot : prendre; occurences : 236
+mot : ruer; occurences : 232
+mot : regarder; occurences : 231
+mot : devoir; occurences : 229
+mot : entrer; occurences : 222
+mot : livrer; occurences : 207
+---------------------
+Catégorie : ADJ
+mot : tout; occurences : 263
+mot : fait; occurences : 68
+mot : in; occurences : 60
+mot : pris; occurences : 56
+mot : jolie; occurences : 45
+mot : populaire; occurences : 38
+mot : profond; occurences : 37
+mot : dit; occurences : 36
+mot : charmant; occurences : 36
+mot : beau; occurences : 36
+mot : immense; occurences : 34
+mot : vaste; occurences : 33
+mot : horrible; occurences : 33
+mot : magnifique; occurences : 32
+mot : voulu; occurences : 32
+mot : rare; occurences : 31
+mot : immobile; occurences : 31
+mot : joyeux; occurences : 30
+mot : germain; occurences : 29
+mot : perdu; occurences : 28
+---------------------
+Catégorie : NOM
+mot : pas; occurences : 1215
+mot : son; occurences : 1092
+mot : plus; occurences : 976
+mot : sa; occurences : 959
+mot : dit; occurences : 736
+mot : si; occurences : 558
+mot : grand; occurences : 423
+mot : pari; occurences : 406
+mot : bien; occurences : 388
+mot : o; occurences : 370
+mot : fait; occurences : 359
+mot : roi; occurences : 349
+mot : dune; occurences : 345
+mot : mme; occurences : 343
+mot : petit; occurences : 328
+mot : saint; occurences : 320
+mot : fille; occurences : 318
+mot : main; occurences : 296
+mot : beau; occurences : 285
+mot : moment; occurences : 278
