@@ -13,7 +13,7 @@ start-splitter:
 start-tagger:
 	java -cp target/tp-kafka-0.0.1-SNAPSHOT.jar if4030.kafka.WordToLexiqueInterpreter
 start-classifier:
-	java -cp target/tp-kafka-0.0.1-SNAPSHOT.jar if4030.kafka.TopWordsPerCategory
+	java -cp target/tp-kafka-0.0.1-SNAPSHOT.jar if4030.kafka.ClassificationPrinter
 start-producer:
 	cat books/notredame.txt | $(KAFKA_DIR)/bin/kafka-console-producer.sh --bootstrap-server localhost:9092 \
         --topic lines-stream
