@@ -10,7 +10,7 @@ compile-processors:
 	mvn clean package
 start-splitter:
 	java -cp target/tp-kafka-0.0.1-SNAPSHOT.jar if4030.kafka.WordSplitter
-start-tagger:
+start-lexique-intrepreter:
 	java -cp target/tp-kafka-0.0.1-SNAPSHOT.jar if4030.kafka.WordToLexiqueInterpreter
 start-classifier:
 	java -cp target/tp-kafka-0.0.1-SNAPSHOT.jar if4030.kafka.ClassificationPrinter
@@ -26,13 +26,13 @@ start-line-consumer:
         --formatter kafka.tools.DefaultMessageFormatter --property print.key=true \
         --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer \
         --property value.deserializer=org.apache.kafka.common.serialization.StringDeserializer
-start-count-consumer:
+start-word-consumer:
 	$(KAFKA_DIR)/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 \
         --topic words-stream --from-beginning \
         --formatter kafka.tools.DefaultMessageFormatter --property print.key=true \
         --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer \
         --property value.deserializer=org.apache.kafka.common.serialization.StringDeserializer
-start-tag-consumer:
+start-intrepreter-consumer:
 	$(KAFKA_DIR)/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 \
         --topic tagged-words-stream --from-beginning \
         --formatter kafka.tools.DefaultMessageFormatter --property print.key=true \
