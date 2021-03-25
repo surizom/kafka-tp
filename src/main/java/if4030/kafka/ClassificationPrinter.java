@@ -83,21 +83,35 @@ public final class ClassificationPrinter {
 
     static void updateOccurences(String category, String lemme) {
         if (lexiqueOccurenceByCategory.get(category) == null) {
-            lexiqueOccurenceByCategory.put(category, Collections.singletonMap(lemme, 0L));
+            lexiqueOccurenceByCategory.put(category, Map.of(lemme, 1L));
+        } else {
+            lexiqueOccurenceByCategory.put(category,
+                    generateUpdatedCategory(lemme, lexiqueOccurenceByCategory.get(category)));
+        }
+    }
+
+    static Map<String, Long> generateUpdatedCategory(String lemme, Map<String, Long> categoryMap) {
+
+        Map<String, Long> newMap = categoryMap.entrySet().stream().filter(entry -> !entry.getKey().equals(lemme))
+                .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+
+        if (categoryMap.get(lemme) == null) {
+            newMap.put(lemme, 1L);
+        } else {
+            newMap.put(lemme, categoryMap.get(lemme) + 1L);
         }
 
-        lexiqueOccurenceByCategory.get(category).entrySet().stream()
-                .map(entry -> Map.entry(entry.getKey(), entry.getValue() + (entry.getKey().equals(lemme) ? 1L : 0L)))
-                .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+        return newMap;
     }
 
     static void createWordTagStream(final StreamsBuilder builder) {
         final KStream<String, String> source = builder.stream(INPUT_TOPIC,
                 Consumed.with(Serdes.String(), Serdes.String()));
+
         final KStream<String, String> stopSource = builder.stream(STOP_TOPIC);
 
         source.filter((key, value) -> key != null && !key.isBlank() && value != null && !value.isBlank())
-                .peek((category, lemme) -> updateOccurences(category, lemme));
+                .peek((key, value) -> updateOccurences(key, value));
 
         stopSource.filter((key, value) -> value.equals("END")).peek((key, value) -> printTop20Tags());
     }
