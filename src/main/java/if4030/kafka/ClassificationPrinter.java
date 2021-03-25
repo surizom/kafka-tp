@@ -123,8 +123,9 @@ public final class ClassificationPrinter {
     static void printTop20InCategory(Entry<String, Map<String, Long>> category) {
         System.out.println("---------------------");
         System.out.println("Catégorie : " + category.getKey());
-        category.getValue().entrySet().stream().sorted(Map.Entry.comparingByValue()).limit(20).forEach(
-                (entry) -> System.out.println("mot : " + entry.getKey() + "; occurences : " + entry.getValue()));
+        category.getValue().entrySet().stream().sorted(Entry.<String, Long>comparingByValue().reversed()).limit(20)
+                .forEach((entry) -> System.out
+                        .println("mot : " + entry.getKey() + "; occurences : " + entry.getValue()));
     }
 
     public static void main(final String[] args) throws IOException {
